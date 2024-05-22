@@ -17,6 +17,16 @@
         <input type="number" id="amount" name="amount" required><br><br>
         <label for="currency">Currency:</label>
         <input type="text" id="currency" name="currency" required><br><br>
+        <label for="address">Address:</label>
+        <input type="text" id="address" name="address" required><br><br>
+        <label for="city">City:</label>
+        <input type="text" id="city" name="city" required><br><br>
+        <label for="state">State:</label>
+        <input type="text" id="state" name="state" required><br><br>
+        <label for="zip">Zip Code:</label>
+        <input type="text" id="zip" name="zip" required><br><br>
+        <label for="country">Country:</label>
+        <input type="text" id="country" name="country" required><br><br>
         <div id="card-element"></div><br>
         <button type="button" onclick="createPaymentIntent()">Create Payment Intent</button>
     </form>
@@ -33,13 +43,25 @@
             const email = document.getElementById('email').value;
             const amount = document.getElementById('amount').value;
             const currency = document.getElementById('currency').value;
+            const address = document.getElementById('address').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const zip = document.getElementById('zip').value;
+            const country = document.getElementById('country').value;
 
             const {error, paymentMethod} = await stripe.createPaymentMethod({
                 type: 'card',
                 card: cardElement,
                 billing_details: {
                     name: name,
-                    email: email
+                    email: email,
+                    address: {
+                        line1: address,
+                        city: city,
+                        state: state,
+                        postal_code: zip,
+                        country: country
+                    }
                 }
             });
 
@@ -58,7 +80,12 @@
                     email: email,
                     amount: amount,
                     currency: currency,
-                    payment_method_id: paymentMethod.id
+                    payment_method_id: paymentMethod.id,
+                    address: address,
+                    city: city,
+                    state: state,
+                    zip: zip,
+                    country: country
                 })
             });
             
