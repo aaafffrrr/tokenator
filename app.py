@@ -15,14 +15,24 @@ def index():
 def create_payment_intent():
     try:
         data = request.json
+        name = data['name']
+        email = data['email']
         amount = data['amount']
         currency = data['currency']
         payment_method_id = data['payment_method_id']
         
-        # Create a payment intent with the tokenized payment method
+        # Create a customer
+        customer = stripe.Customer.create(
+            name=name,
+            email=email,
+            payment_method=payment_method_id
+        )
+        
+        # Create a payment intent with the tokenized payment method and customer
         payment_intent = stripe.PaymentIntent.create(
             amount=amount,
             currency=currency,
+            customer=customer.id,
             payment_method=payment_method_id,
             confirm=True  # Automatically confirm the payment intent
         )
