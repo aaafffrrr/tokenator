@@ -20,12 +20,24 @@ def create_payment_intent():
         amount = data['amount']
         currency = data['currency']
         payment_method_id = data['payment_method_id']
+        address = data['address']
+        city = data['city']
+        state = data['state']
+        zip = data['zip']
+        country = data['country']
         
-        # Create a customer
+        # Create a customer with detailed billing information
         customer = stripe.Customer.create(
             name=name,
             email=email,
-            payment_method=payment_method_id
+            payment_method=payment_method_id,
+            address={
+                'line1': address,
+                'city': city,
+                'state': state,
+                'postal_code': zip,
+                'country': country
+            }
         )
         
         # Create a payment intent with the tokenized payment method and customer
@@ -34,7 +46,18 @@ def create_payment_intent():
             currency=currency,
             customer=customer.id,
             payment_method=payment_method_id,
-            confirm=True  # Automatically confirm the payment intent
+            confirm=True,  # Automatically confirm the payment intent
+            setup_future_usage='off_session',  # Disable 3DS for future off-session payments
+            shipping={
+                'name': name,
+                'address': {
+                    'line1': address,
+                    'city': city,
+                    'state': state,
+                    'postal_code': zip,
+                    'country': country
+                }
+            }
         )
         
         return jsonify({
