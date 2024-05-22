@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Set your Stripe API key
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+stripe.api_key = os.getenv('sk_test_51IBrFmCKUTYIL9IlrEFRQTEqZp7ytuewDWd9IeyV6tVwgpFe26S5BvERCic4xedCrHtq5P3TBjtCKADn5hrpmIla00vJqAKDYb')
 
 @app.route('/')
 def index():
