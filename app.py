@@ -17,27 +17,13 @@ def create_payment_intent():
         data = request.json
         amount = data['amount']
         currency = data['currency']
-        card_number = data['card_number']
-        exp_month = data['exp_month']
-        exp_year = data['exp_year']
-        cvc = data['cvc']
-        
-        # Tokenize the payment method
-        payment_method = stripe.PaymentMethod.create(
-            type="card",
-            card={
-                "number": card_number,
-                "exp_month": exp_month,
-                "exp_year": exp_year,
-                "cvc": cvc,
-            },
-        )
+        payment_method_id = data['payment_method_id']
         
         # Create a payment intent with the tokenized payment method
         payment_intent = stripe.PaymentIntent.create(
             amount=amount,
             currency=currency,
-            payment_method=payment_method['id'],
+            payment_method=payment_method_id,
             confirm=True  # Automatically confirm the payment intent
         )
         
