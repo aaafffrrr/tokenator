@@ -4,35 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stripe Payment Intent</title>
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <h1>Stripe Payment Intent Creator</h1>
     <form id="payment-form">
         <label for="amount">Amount:</label>
-        <input type="number" id="amount" name="amount"><br><br>
+        <input type="number" id="amount" name="amount" required><br><br>
         <label for="currency">Currency:</label>
-        <input type="text" id="currency" name="currency"><br><br>
-        <label for="card-number">Card Number:</label>
-        <input type="text" id="card-number" name="card_number"><br><br>
-        <label for="exp-month">Exp Month (MM):</label>
-        <input type="text" id="exp-month" name="exp_month"><br><br>
-        <label for="exp-year">Exp Year (YYYY):</label>
-        <input type="text" id="exp-year" name="exp_year"><br><br>
-        <label for="cvc">CVC:</label>
-        <input type="text" id="cvc" name="cvc"><br><br>
+        <input type="text" id="currency" name="currency" required><br><br>
+        <div id="card-element"></div><br>
         <button type="button" onclick="createPaymentIntent()">Create Payment Intent</button>
     </form>
     <div id="result"></div>
     
     <script>
+        var stripe = Stripe('your-publishable-key-here');
+        var elements = stripe.elements();
+        var cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+        
         async function createPaymentIntent() {
             const amount = document.getElementById('amount').value;
             const currency = document.getElementById('currency').value;
-            const cardNumber = document.getElementById('card-number').value;
-            const expMonth = document.getElementById('exp-month').value;
-            const expYear = document.getElementById('exp-year').value;
-            const cvc = document.getElementById('cvc').value;
-            
+
+            const {error, paymentMethod} = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardElement,
+            });
+
+            if (error) {
+                document.getElementById('result').innerText = error.message;
+                return;
+            }
+
             const response = await fetch('/create-payment-intent', {
                 method: 'POST',
                 headers: {
@@ -41,10 +46,7 @@
                 body: JSON.stringify({
                     amount: amount,
                     currency: currency,
-                    card_number: cardNumber,
-                    exp_month: expMonth,
-                    exp_year: expYear,
-                    cvc: cvc
+                    payment_method_id: paymentMethod.id
                 })
             });
             
