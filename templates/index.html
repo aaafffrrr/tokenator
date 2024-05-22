@@ -9,6 +9,10 @@
 <body>
     <h1>Stripe Payment Intent Creator</h1>
     <form id="payment-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
         <label for="amount">Amount:</label>
         <input type="number" id="amount" name="amount" required><br><br>
         <label for="currency">Currency:</label>
@@ -25,12 +29,18 @@
         cardElement.mount('#card-element');
         
         async function createPaymentIntent() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
             const amount = document.getElementById('amount').value;
             const currency = document.getElementById('currency').value;
 
             const {error, paymentMethod} = await stripe.createPaymentMethod({
                 type: 'card',
                 card: cardElement,
+                billing_details: {
+                    name: name,
+                    email: email
+                }
             });
 
             if (error) {
@@ -44,6 +54,8 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    name: name,
+                    email: email,
                     amount: amount,
                     currency: currency,
                     payment_method_id: paymentMethod.id
