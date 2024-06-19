@@ -2,96 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stripe Payment Intent</title>
+    <title>Stripe Payment Integration</title>
     <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-    <h1>Stripe Payment Intent Creator</h1>
     <form id="payment-form">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        <label for="amount">Amount:</label>
-        <input type="number" id="amount" name="amount" required><br><br>
-        <label for="currency">Currency:</label>
-        <input type="text" id="currency" name="currency" required><br><br>
-        <label for="address">Address:</label>
-        <input type="text" id="address" name="address" required><br><br>
-        <label for="city">City:</label>
-        <input type="text" id="city" name="city" required><br><br>
-        <label for="state">State:</label>
-        <input type="text" id="state" name="state" required><br><br>
-        <label for="zip">Zip Code:</label>
-        <input type="text" id="zip" name="zip" required><br><br>
-        <label for="country">Country:</label>
-        <input type="text" id="country" name="country" required><br><br>
-        <div id="card-element"></div><br>
-        <button type="button" onclick="createPaymentIntent()">Create Payment Intent</button>
+        <div id="card-element"><!-- Stripe Elements will create input here --></div>
+        <button type="submit">Pay</button>
+        <div id="card-errors" role="alert"></div>
     </form>
-    <div id="result"></div>
-    
-    <script>
-        var stripe = Stripe('pk_live_51OEbBSEXbbIxpm4PBqVJakn2tW4aDMdZKwS1K3jGcqvexQNcG6ch7dgpHFMbmy97NnlOFKfSpG3gRjmjAyTYtSKM00bWjEfpFI');
-        var elements = stripe.elements();
-        var cardElement = elements.create('card');
-        cardElement.mount('#card-element');
-        
-        async function createPaymentIntent() {
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const amount = document.getElementById('amount').value;
-            const currency = document.getElementById('currency').value;
-            const address = document.getElementById('address').value;
-            const city = document.getElementById('city').value;
-            const state = document.getElementById('state').value;
-            const zip = document.getElementById('zip').value;
-            const country = document.getElementById('country').value;
 
-            const {error, paymentMethod} = await stripe.createPaymentMethod({
-                type: 'card',
-                card: cardElement,
-                billing_details: {
-                    name: name,
-                    email: email,
-                    address: {
-                        line1: address,
-                        city: city,
-                        state: state,
-                        postal_code: zip,
-                        country: country
-                    }
-                }
-            });
+    <script>
+        // Initialize Stripe with your publishable key
+        const stripe = Stripe('pk_live_51OEbBSEXbbIxpm4PBqVJakn2tW4aDMdZKwS1K3jGcqvexQNcG6ch7dgpHFMbmy97NnlOFKfSpG3gRjmjAyTYtSKM00bWjEfpFI');
+        const elements = stripe.elements();
+        const card = elements.create('card');
+        card.mount('#card-element');
+
+        card.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const { token, error } = await stripe.createToken(card);
 
             if (error) {
-                document.getElementById('result').innerText = error.message;
-                return;
-            }
+                const displayError = document.getElementById('card-errors');
+                displayError.textContent = error.message;
+            } else {
+                const response = await fetch('/charge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token.id })
+                });
 
-            const response = await fetch('/create-payment-intent', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: name,
-                    email: email,
-                    amount: amount,
-                    currency: currency,
-                    payment_method_id: paymentMethod.id,
-                    address: address,
-                    city: city,
-                    state: state,
-                    zip: zip,
-                    country: country
-                })
-            });
-            
-            const result = await response.json();
-            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
-        }
+                if (response.ok) {
+                    console.log('Payment succeeded!');
+                } else {
+                    console.log('Payment failed.');
+                }
+            }
+        });
     </script>
 </body>
 </html>
